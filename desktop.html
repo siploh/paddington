@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Dashboard Modern</title>
+
+  <!-- Font Awesome untuk ikon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      /* Background hijau gradasi ke putih */
+      background: linear-gradient(135deg, #a8e063, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(4, 160px);
+      grid-gap: 25px;
+    }
+
+    .menu-box {
+      color: #fff;
+      width: 160px;
+      height: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 15px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .menu-box i {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .menu-box:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    /* Gradasi warna unik tiap kotak */
+    .menu-box:nth-child(1) { background: linear-gradient(135deg, #6a11cb, #2575fc); } /* Dashboard */
+    .menu-box:nth-child(2) { background: linear-gradient(135deg, #ff416c, #ff4b2b); } /* Booking */
+    .menu-box:nth-child(3) { background: linear-gradient(135deg, #43cea2, #185a9d); } /* Kamar */
+    .menu-box:nth-child(4) { background: linear-gradient(135deg, #f7971e, #ffd200); } /* Tamu */
+    .menu-box:nth-child(5) { background: linear-gradient(135deg, #ff5f6d, #ffc371); } /* Laporan */
+    .menu-box:nth-child(6) { background: linear-gradient(135deg, #00c6ff, #0072ff); } /* Setting */
+    .menu-box:nth-child(7) { background: linear-gradient(135deg, #f953c6, #b91d73); } /* Promo */
+    .menu-box:nth-child(8) { background: linear-gradient(135deg, #43e97b, #38f9d7); } /* Kontak */
+
+    @media(max-width: 900px){
+      .container {
+        grid-template-columns: repeat(2, 160px);
+        grid-gap: 20px;
+      }
+    }
+
+    @media(max-width: 400px){
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="index.html" class="menu-box">
+      <i class="fas fa-home"></i>
+      Website
+    </a>
+    <a href="booking_dashboard.html" class="menu-box">
+      <i class="fas fa-calendar-check"></i>
+      Booking
+    </a>
+    <a href="checkin.html" class="menu-box">
+      <i class="fas fa-bed"></i>
+      Check In
+    </a>
+    <a href="tamudaftar.html" class="menu-box">
+      <i class="fas fa-user"></i>
+      Buku Tamu
+    </a>
+    <a href="DaftarTamu.html" class="menu-box">
+      <i class="fas fa-file-alt"></i>
+      Daftar Tamu
+    </a>
+    <a href="admin_desktop.html" class="menu-box">
+      <i class="fas fa-cog"></i>
+      Admin
+    </a>
+    <a href="promo.html" class="menu-box">
+      <i class="fas fa-tags"></i>
+      Promo
+    </a>
+    <a href="kontak.html" class="menu-box">
+      <i class="fas fa-envelope"></i>
+      Kontak
+    </a>
+  </div>
+
+</body>
+</html>

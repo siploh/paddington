@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Bawah Tangga Production</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Library untuk Excel & PDF Profesional -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+:root{
+  --primary:#22c55e;
+  --dark:#065f46;
+  --bg:#f1f5f9;
+  --card:#ffffff;
+  --muted:#64748b;
+}
+
+*{box-sizing:border-box;font-family:'Poppins',Arial}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#0f172a;
+}
+
+header{
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:#fff;
+  padding:20px 30px;
+  font-size:22px;
+  font-weight:700;
+  text-align:left;
+}
+
+.wrap{
+  max-width:1280px;
+  margin:auto;
+  padding:30px;
+  display:grid;
+  grid-template-columns:340px 1fr;
+  gap:24px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 10px 28px rgba(0,0,0,.08);
+}
+
+.card h3{
+  margin:0 0 14px;
+  font-size:15px;
+}
+
+.filter{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+
+.filter-btn{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+
+input,button{
+  width:100%;
+  padding:11px 12px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  font-size:13px;
+}
+
+button{
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  border:none;
+  cursor:pointer;
+}
+
+button.reset{background:#94a3b8}
+
+.main{
+  display:grid;
+  gap:24px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:20px;
+}
+
+.total{
+  font-size:28px;
+  font-weight:700;
+  color:var(--dark);
+}
+
+.small{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.kamar{
+  padding:14px;
+  border-radius:14px;
+  background:#ecfeff;
+  margin-top:10px;
+  border-left:6px solid var(--primary);
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  font-weight:600;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+th,td{
+  padding:12px 14px;
+  border-bottom:1px solid #e5e7eb;
+  white-space:nowrap;
+}
+
+th{
+  background:#f8fafc;
+  font-size:12px;
+  text-transform:uppercase;
+  text-align:left;
+}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  padding:14px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .wrap{
+    grid-template-columns:1fr;
+    padding:16px;
+  }
+  .stats{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:600px){
+  header{
+    font-size:18px;
+    padding:16px 20px;
+    text-align:center;
+  }
+
+  .filter-btn{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .filter input{
+    padding:10px;
+    font-size:12px;
+  }
+
+  button{
+    font-size:12px;
+    padding:10px;
+  }
+
+  .stats{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .card{
+    padding:16px;
+    border-radius:12px;
+  }
+
+  table th, table td{
+    padding:8px 10px;
+    font-size:12px;
+  }
+
+  .table-wrap{
+    overflow-x:auto;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>📊 Admin</header>
+
+<div class="wrap">
+
+<!-- FILTER DAN DOWNLOAD -->
+<div class="card">
+  <h3>Filter Tanggal</h3>
+  <div class="filter">
+    <input type="date" id="tglMulai">
+    <input type="date" id="tglAkhir">
+  </div>
+  <div class="filter-btn">
+    <button onclick="applyFilter()">Terapkan</button>
+    <button class="reset" onclick="resetFilter()">Reset</button>
+    <button onclick="downloadExcel()">Download Excel</button>
+    <button onclick="downloadPDF()">Download PDF</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="card">
+      <h3>Total Pemasukan</h3>
+      <div id="totalUang" class="total">Rp 0</div>
+    </div>
+    <div class="card">
+      <h3>Hari Ini</h3>
+      <div id="hariIni" class="total">Rp 0</div>
+    </div>
+  </div>
+
+  <!-- KAMAR TERISI -->
+  <div class="card">
+    <h3>Bawah Tangga Production</h3>
+    <div id="kamarTerisi"></div>
+  </div>
+
+  <!-- TABEL RIWAYAT -->
+  <div class="card">
+    <h3>Riwayat Transaksi</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Kamar</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th>Total</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="riwayat"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const url = "https://script.google.com/macros/s/AKfycbyKub7jhC_-t24xjllsKIpzdDlLJ--qrBQXFC19qQ8Imdothtz7IwKrZJwZnJL2s-nY3Q/exec";
+const rupiah = n => "Rp " + Number(n||0).toLocaleString("id-ID");
+
+let dataAsli = [];
+
+fetch(url,{
+  method:"POST",
+  body:JSON.stringify({action:"adminDashboard"})
+})
+.then(r=>r.json())
+.then(d=>{
+  dataAsli = d.transaksi;
+  render(d.transaksi);
+  hariIni.innerText = rupiah(d.today);
+});
+
+function applyFilter(){
+  const a = tglMulai.value;
+  const b = tglAkhir.value;
+  if(!a || !b) return;
+
+  const fa = new Date(a);
+  const fb = new Date(b);
+
+  const hasil = dataAsli.filter(x=>{
+    const t = new Date(x.checkin.split("-").reverse().join("-"));
+    return t>=fa && t<=fb;
+  });
+
+  render(hasil);
+}
+
+function resetFilter(){
+  tglMulai.value="";
+  tglAkhir.value="";
+  render(dataAsli);
+}
+
+function render(list){
+  let total=0;
+  riwayat.innerHTML="";
+  kamarTerisi.innerHTML="";
+
+  if(list.length===0){
+    riwayat.innerHTML=`<tr><td colspan="6" class="empty">Data tidak ditemukan</td></tr>`;
+    kamarTerisi.innerHTML=`<div class="empty">Tidak ada kamar</div>`;
+  }
+
+  list.forEach(t=>{
+    total+=Number(t.total||0);
+    riwayat.innerHTML+=`
+      <tr>
+        <td>${t.nama}</td>
+        <td>${t.kamar}</td>
+        <td>${t.checkin}</td>
+        <td>${t.checkout}</td>
+        <td>${rupiah(t.total)}</td>
+        <td><button onclick="cetakInvoice('${t.nama}','${t.kamar}','${t.checkin}','${t.checkout}',${t.total})">Cetak</button></td>
+      </tr>`;
+  });
+
+  totalUang.innerText = rupiah(total);
+}
+
+// CETAK INVOICE
+function cetakInvoice(nama, kamar, checkin, checkout, total){
+  const w = window.open('', '_blank', 'width=700,height=700');
+  w.document.write(`
+  <html>
+  <head>
+  <title>Invoice ${nama}</title>
+  <style>
+    body{font-family:'Poppins',Arial; margin:40px; color:#0f172a;}
+    header{display:flex; align-items:center; gap:20px; margin-bottom:30px;}
+    header img{width:80px; height:80px; object-fit:contain;}
+    header h1{font-size:24px; color:#22c55e; margin:0;}
+    h2{text-align:center; margin-bottom:20px;}
+    table{width:100%; border-collapse:collapse; margin-top:20px;}
+    th,td{border:1px solid #000; padding:12px 10px; text-align:left;}
+    th{background:#22c55e; color:#fff;}
+    .total{text-align:right; font-weight:bold;}
+    footer{text-align:center; margin-top:30px; font-size:12px; color:#64748b;}
+    button{margin-top:20px; padding:10px 15px; background:#22c55e; color:#fff; border:none; border-radius:5px; cursor:pointer;}
+  </style>
+  </head>
+  <body>
+    <header>
+      <img src="https://via.placeholder.com/80?text=Logo" alt="Logo Homestay">
+      <h1>Bawah Tangga Production</h1>
+    </header>
+    <h2>Invoice Transaksi</h2>
+    <table>
+      <tr><th>Nama</th><td>${nama}</td></tr>
+      <tr><th>Kamar</th><td>${kamar}</td></tr>
+      <tr><th>Check-in</th><td>${checkin}</td></tr>
+      <tr><th>Check-out</th><td>${checkout}</td></tr>
+      <tr><th>Total</th><td>${rupiah(total)}</td></tr>
+    </table>
+    <p style="text-align:center;">
+      <button onclick="window.print()">Cetak</button>
+    </p>
+    <footer>Terima kasih telah menginap di Homestay kami!</footer>
+  </body>
+  </html>
+  `);
+  w.document.close();
+}
+
+// DOWNLOAD EXCEL
+function downloadExcel(){
+  if(dataAsli.length===0) return alert("Tidak ada data untuk di-download!");
+  
+  const ws_data = [["Nama","Kamar","Check-in","Check-out","Total"]];
+  dataAsli.forEach(t=>{
+    ws_data.push([t.nama, t.kamar, t.checkin, t.checkout, t.total]);
+  });
+  
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb, ws, "Pemasukan");
+  XLSX.writeFile(wb, "Laporan_Pemasukan.xlsx");
+}
+
+// DOWNLOAD PDF
+async function downloadPDF(){
+  if(dataAsli.length===0) return alert("Tidak ada data untuk di-download!");
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  doc.setFillColor(34,197,94);
+  doc.rect(0,0,210,25,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16);
+  doc.text("Laporan Pemasukan Homestay",105,17,{align:'center'});
+  
+  const rows = dataAsli.map(t=>[t.nama,t.kamar,t.checkin,t.checkout,rupiah(t.total)]);
+  const columns = ["Nama","Kamar","Check-in","Check-out","Total"];
+  
+  doc.autoTable({
+    startY:30,
+    head:[columns],
+    body:rows,
+    headStyles:{fillColor:[34,197,94], textColor:255, halign:'center'},
+    alternateRowStyles:{fillColor:[245,245,245]},
+    styles:{fontSize:10}
+  });
+
+  const totalUangPDF = dataAsli.reduce((sum,t)=>sum+Number(t.total||0),0);
+  doc.setFontSize(12);
+  doc.setTextColor(0);
+  doc.text(`Total Pemasukan: ${rupiah(totalUangPDF)}`, 14, doc.lastAutoTable.finalY + 10);
+
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text("Terima kasih telah menginap di Homestay kami!", 105, doc.internal.pageSize.height - 10, {align:"center"});
+  
+  doc.save("Laporan_Pemasukan_Profesional_Branded.pdf");
+}
+</script>
+
+</body>
+</html>

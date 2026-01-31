@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Daftar Tamu - Search & Reset</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#16a34a;
+  --bg:#f3f4f6;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  font-family:'Poppins',sans-serif;
+  background:var(--bg);
+  margin:0;
+  padding:15px;
+  color:var(--text);
+}
+
+.container{
+  max-width:800px;
+  margin:auto;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.header h2{
+  margin:0;
+  font-weight:600;
+  font-size:1.5rem;
+}
+
+.header p{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:0.9rem;
+}
+
+.filters{
+  margin-bottom:15px;
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.filters input{
+  padding:8px 12px;
+  border-radius:6px;
+  border:1px solid #d1d5db;
+  font-size:0.9rem;
+  flex:1;
+  min-width:180px;
+}
+
+.filters button{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:0.9rem;
+  transition:.25s;
+}
+
+#searchBtn{background:#2563eb;color:#fff;}
+#searchBtn:hover{background:#1d4ed8;}
+
+#resetBtn{background:#6b7280;color:#fff;}
+#resetBtn:hover{background:#4b5563;}
+
+.card{
+  background:var(--card);
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  padding:12px;
+  margin-bottom:12px;
+}
+
+.card img{
+  width:100%;
+  max-width:120px;
+  border-radius:8px;
+  display:block;
+  margin-bottom:8px;
+}
+
+.card h3{
+  margin:5px 0;
+  font-size:1rem;
+  font-weight:500;
+}
+
+.card p{
+  margin:3px 0;
+  font-size:0.85rem;
+  color:var(--muted);
+}
+
+button.view-btn{
+  background:#16a34a;
+  color:#fff;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  margin-top:5px;
+  transition:.25s;
+}
+
+button.view-btn:hover{
+  background:#15803d;
+}
+
+.loading,
+.error{
+  text-align:center;
+  padding:20px;
+  color:var(--muted);
+}
+
+.error{
+  color:#dc2626;
+}
+
+/* Pagination */
+.pagination{
+  margin-top:10px;
+  text-align:center;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:5px;
+}
+
+.pagination button{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:.25s;
+  font-size:0.85rem;
+}
+
+.pagination button:hover{
+  background:#15803d;
+}
+
+.pagination button:disabled{
+  background:#9ca3af;
+  cursor:not-allowed;
+}
+
+/* Responsive */
+@media(max-width:768px){
+  body{padding:10px;}
+  .filters input{flex:1 1 60%;}
+  .filters button{flex:1 1 18%;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h2>📋 Daftar Tamu</h2>
+    <p>Search by Nama / HP</p>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="search" placeholder="Nama / HP">
+    <button id="searchBtn">Cari</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <div id="cards-container">
+    <div class="loading">Memuat data...</div>
+  </div>
+
+  <div class="pagination" id="pagination"></div>
+
+</div>
+
+<script>
+const URL = "https://script.google.com/macros/s/AKfycby6nl5eyI9ed9HvQ-xaBnNn8D8SC2kBRfzuvTJKvt4IOI7JTLV2hHj_hNAgyTfw8E77/exec";
+let guestData = [];
+let filteredData = [];
+const rowsPerPage = 5;
+let currentPage = 1;
+
+// Format timestamp
+function formatTimestamp(ts){
+  const date = new Date(ts);
+  if(isNaN(date)) return ts; // fallback
+  const day = String(date.getDate()).padStart(2,'0');
+  const month = String(date.getMonth()+1).padStart(2,'0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2,'0');
+  const minutes = String(date.getMinutes()).padStart(2,'0');
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
+// Render cards
+function renderCards(data,page=1){
+  const start = (page-1)*rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = data.slice(start,end);
+
+  let html = "";
+  pageData.forEach(item=>{
+    const nama = item.nama ? item.nama.toString() : '';
+    const hp = item.hp ? item.hp.toString() : '';
+    html += `<div class="card">
+      ${item.foto ? `<img src="${item.foto}" alt="Foto">` : ''}
+      <h3>${nama}</h3>
+      <p><strong>HP:</strong> ${hp}</p>
+      <p><strong>Timestamp:</strong> ${formatTimestamp(item.timestamp)}</p>
+      ${item.foto ? `<button class="view-btn" onclick="window.open('${item.foto}','_blank')">View</button>` : ''}
+    </div>`;
+  });
+
+  document.getElementById("cards-container").innerHTML = html || `<div class="loading">Data tidak ditemukan</div>`;
+  renderPagination(data.length,page);
+}
+
+// Pagination
+function renderPagination(totalRows,page){
+  const totalPages = Math.ceil(totalRows/rowsPerPage);
+  if(totalPages <= 1){document.getElementById("pagination").innerHTML = ''; return;}
+  let html = '';
+  html += `<button ${page===1?'disabled':''} onclick="goPage(${page-1})">Prev</button>`;
+  for(let i=1;i<=totalPages;i++){
+    html += `<button ${i===page?'disabled':''} onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button ${page===totalPages?'disabled':''} onclick="goPage(${page+1})">Next</button>`;
+  document.getElementById("pagination").innerHTML = html;
+}
+
+function goPage(page){
+  currentPage = page;
+  renderCards(filteredData,currentPage);
+}
+
+// Filter dengan tombol Cari
+function filterData(){
+  const searchText = document.getElementById("search").value.trim().toLowerCase();
+  filteredData = guestData.filter(item => {
+    const nama = item.nama ? item.nama.toString().toLowerCase() : '';
+    const hp = item.hp ? item.hp.toString().toLowerCase() : '';
+    return nama.includes(searchText) || hp.includes(searchText);
+  });
+  currentPage = 1;
+  renderCards(filteredData,currentPage);
+}
+
+// Reset data
+function resetData(){
+  document.getElementById("search").value = '';
+  filteredData = guestData;
+  currentPage = 1;
+  renderCards(filteredData,currentPage);
+}
+
+// Event tombol
+document.getElementById("searchBtn").addEventListener("click", filterData);
+document.getElementById("resetBtn").addEventListener("click", resetData);
+
+// Fetch data
+fetch(URL)
+  .then(res=>res.json())
+  .then(data=>{
+    guestData = Array.isArray(data) ? data : [];
+    filteredData = guestData;
+    renderCards(filteredData,currentPage);
+  })
+  .catch(err=>{
+    document.getElementById("cards-container").innerHTML = `<div class="error">Gagal memuat data</div>`;
+  });
+</script>
+
+</body>
+</html>

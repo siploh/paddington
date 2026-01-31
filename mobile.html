@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Admin Homestay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#22c55e;
+  --dark:#065f46;
+  --bg:#f1f5f9;
+  --card:#ffffff;
+  --muted:#64748b;
+}
+
+*{box-sizing:border-box;font-family:'Poppins',Arial}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#0f172a;
+}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:#fff;
+  padding:20px 16px;
+  font-size:22px;
+  font-weight:700;
+  text-align:center;
+}
+
+/* WRAPPER MOBILE */
+.wrap{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  padding:16px;
+}
+
+/* CARD */
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+
+.card h3{
+  margin:0 0 12px;
+  font-size:16px;
+}
+
+/* FILTER */
+.filter{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+input,button{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  font-size:16px;
+}
+
+button{
+  background:var(--primary);
+  color:#fff;
+  font-weight:600;
+  border:none;
+  cursor:pointer;
+  margin-top:8px;
+}
+
+button.reset{background:#94a3b8}
+
+/* STAT */
+.stats{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.total{
+  font-size:24px;
+  font-weight:700;
+  color:var(--dark);
+}
+
+.small{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* KAMAR */
+.kamar{
+  padding:14px;
+  border-radius:14px;
+  background:#ecfeff;
+  margin-top:10px;
+  border-left:6px solid var(--primary);
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  font-weight:600;
+}
+
+/* TABLE */
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+
+th,td{
+  padding:12px 10px;
+  border-bottom:1px solid #e5e7eb;
+  white-space:nowrap;
+}
+
+th{
+  background:#f8fafc;
+  font-size:13px;
+  text-transform:uppercase;
+  text-align:left;
+}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  padding:14px;
+}
+
+/* HILANGKAN STYLING DESKTOP */
+@media(min-width:901px){
+  body{
+    display:none; /* desktop tidak terlihat */
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>📊 Dashboard Admin</header>
+
+<div class="wrap">
+
+  <!-- FILTER -->
+  <div class="card">
+    <h3>Filter Tanggal</h3>
+    <div class="filter">
+      <input type="date" id="tglMulai">
+      <input type="date" id="tglAkhir">
+    </div>
+    <button onclick="applyFilter()">Terapkan</button>
+    <button class="reset" onclick="resetFilter()">Reset</button>
+  </div>
+
+  <!-- STAT -->
+  <div class="stats">
+    <div class="card">
+      <h3>Total Pemasukan</h3>
+      <div id="totalUang" class="total">Rp 0</div>
+    </div>
+    <div class="card">
+      <h3>Hari Ini</h3>
+      <div id="hariIni" class="total">Rp 0</div>
+    </div>
+  </div>
+
+  <!-- KAMAR TERISI -->
+  <div class="card">
+    <h3>Kamar Sedang Terisi</h3>
+    <div id="kamarTerisi"></div>
+  </div>
+
+  <!-- RIWAYAT -->
+  <div class="card">
+    <h3>Riwayat Transaksi</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Kamar</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th>Total</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="riwayat"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Sama seperti sebelumnya
+const url = "https://script.google.com/macros/s/AKfycbyKub7jhC_-t24xjllsKIpzdDlLJ--qrBQXFC19qQ8Imdothtz7IwKrZJwZnJL2s-nY3Q/exec";
+const rupiah = n => "Rp " + Number(n||0).toLocaleString("id-ID");
+
+let dataAsli = [];
+
+fetch(url,{
+  method:"POST",
+  body:JSON.stringify({action:"adminDashboard"})
+})
+.then(r=>r.json())
+.then(d=>{
+  dataAsli = d.transaksi;
+  render(d.transaksi);
+  hariIni.innerText = rupiah(d.today);
+});
+
+function applyFilter(){
+  const a = tglMulai.value;
+  const b = tglAkhir.value;
+  if(!a || !b) return;
+
+  const fa = new Date(a);
+  const fb = new Date(b);
+
+  const hasil = dataAsli.filter(x=>{
+    const t = new Date(x.checkin.split("-").reverse().join("-"));
+    return t>=fa && t<=fb;
+  });
+
+  render(hasil);
+}
+
+function resetFilter(){
+  tglMulai.value="";
+  tglAkhir.value="";
+  render(dataAsli);
+}
+
+function render(list){
+  let total=0;
+  riwayat.innerHTML="";
+  kamarTerisi.innerHTML="";
+
+  if(list.length===0){
+    riwayat.innerHTML=`<tr><td colspan="6" class="empty">Data tidak ditemukan</td></tr>`;
+    kamarTerisi.innerHTML=`<div class="empty">Tidak ada kamar</div>`;
+  }
+
+  list.forEach(t=>{
+    total+=Number(t.total||0);
+    riwayat.innerHTML+=`
+      <tr>
+        <td>${t.nama}</td>
+        <td>${t.kamar}</td>
+        <td>${t.checkin}</td>
+        <td>${t.checkout}</td>
+        <td>${rupiah(t.total)}</td>
+        <td><button onclick="cetakInvoice('${t.nama}','${t.kamar}','${t.checkin}','${t.checkout}',${t.total})">Cetak</button></td>
+      </tr>`;
+  });
+
+  totalUang.innerText = rupiah(total);
+}
+
+// Fungsi cetak sama seperti sebelumnya
+function cetakInvoice(nama, kamar, checkin, checkout, total){
+  const w = window.open('', '_blank', 'width=700,height=700');
+  w.document.write(`<html><body><h1>Invoice ${nama}</h1></body></html>`);
+  w.document.close();
+}
+</script>
+
+</body>
+</html>

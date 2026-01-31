@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Bawah Tanga Homestay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --primary:#1db954;
+  --blue:#0ea5e9;
+  --danger:#ef4444;
+  --success:#16a34a;
+  --bg:#f2f4f8;
+  --card:#ffffff;
+}
+*{box-sizing:border-box;font-family:Poppins,Arial}
+body{margin:0;background:var(--bg)}
+
+header{
+  background:linear-gradient(135deg,var(--primary),#16a34a);
+  color:#fff;
+  padding:18px;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+  position:sticky;
+  top:0;
+}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:18px;
+  margin:16px;
+  box-shadow:0 8px 25px rgba(0,0,0,.08)
+}
+
+input,select{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:14px;
+  border-radius:14px;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+  color:#fff
+}
+
+.btn-primary{background:var(--primary)}
+.btn-blue{background:var(--blue)}
+.btn-danger{background:var(--danger)}
+.btn-edit{background:var(--success)}
+
+.hidden{display:none}
+
+.menu{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin:14px
+}
+.menu button{
+  background:#fff;
+  color:#374151
+}
+
+.kamar{
+  border-radius:14px;
+  padding:14px;
+  margin-top:12px;
+}
+.kosong{background:#ecfdf5}
+.terisi{background:#fef2f2}
+
+.row{display:flex;gap:10px;margin-top:10px}
+.row button{flex:1}
+</style>
+</head>
+
+<body>
+
+<header>Bawah Tanga Homestay</header>
+
+<div class="menu">
+  <button onclick="show('kamarCard')">🛏️ Kamar</button>
+  <button onclick="show('checkinCard')">📥 Check-In</button>
+  <button onclick="show('checkoutCard')">📤 Check-Out</button>
+</div>
+
+<!-- ================= KAMAR ================= -->
+<div id="kamarCard" class="card">
+<h3>Daftar Kamar</h3>
+
+<button class="btn-blue" onclick="toggleTambah()">➕ Tambah Kamar</button>
+
+<div id="formTambah" class="hidden">
+  <input id="tk_no" placeholder="No Kamar">
+  <input id="tk_tipe" placeholder="Tipe Kamar">
+  <input id="tk_harga" type="number" placeholder="Harga / Malam">
+  <button class="btn-primary" onclick="tambahKamar()">Simpan</button>
+</div>
+
+<div id="listKamar"></div>
+</div>
+
+<!-- ================= CHECKIN ================= -->
+<div id="checkinCard" class="card hidden">
+<h3>Check-In</h3>
+
+<input id="nama" placeholder="Nama">
+<input id="hp" placeholder="No HP">
+
+<select id="kamar" onchange="setHarga()"></select>
+
+<input type="date" id="ci" onchange="hitungTotal()">
+<input type="date" id="co" onchange="hitungTotal()">
+
+<input id="harga" readonly placeholder="Harga / Malam">
+<input id="total" readonly placeholder="Subtotal">
+
+<select id="jenisDiskon" onchange="ubahPlaceholder();hitungTotal()">
+  <option value="persen">Diskon Persen (%)</option>
+  <option value="rupiah">Diskon Rupiah (Rp)</option>
+</select>
+
+<input id="diskon" type="number" placeholder="Diskon (%)" oninput="hitungTotal()">
+<input id="totalDiskon" readonly placeholder="Total Setelah Diskon">
+
+<button class="btn-primary" onclick="checkin()">Simpan Check-In</button>
+</div>
+
+<!-- ================= CHECKOUT ================= -->
+<div id="checkoutCard" class="card hidden">
+<h3>Check-Out</h3>
+<select id="kamar_out"></select>
+<button class="btn-danger" onclick="checkout()">Checkout</button>
+</div>
+
+<script>
+const url="https://script.google.com/macros/s/AKfycbyKub7jhC_-t24xjllsKIpzdDlLJ--qrBQXFC19qQ8Imdothtz7IwKrZJwZnJL2s-nY3Q/exec";
+let dataKamar=[];
+
+document.addEventListener("DOMContentLoaded",load);
+
+/* ===== LOAD ===== */
+function load(){
+ fetch(url,{
+  method:"POST",
+  body:JSON.stringify({action:"getKamar"})
+ })
+ .then(r=>r.json())
+ .then(d=>{
+  dataKamar=d;
+
+  listKamar.innerHTML="";
+  kamar.innerHTML="";
+  kamar_out.innerHTML="";
+
+  d.forEach(k=>{
+   listKamar.innerHTML+=`
+   <div class="kamar ${k.status=="Kosong"?"kosong":"terisi"}">
+   <b>Kamar ${k.no}</b> (${k.tipe})<br>
+   Rp ${k.harga}<br>
+   Status: ${k.status}
+   ${k.status=="Kosong"?`
+   <div class="row">
+   <button class="btn-edit" onclick="edit('${k.no}','${k.tipe}',${k.harga})">Edit</button>
+   <button class="btn-danger" onclick="hapus('${k.no}')">Hapus</button>
+   </div>`:""}
+   </div>`;
+
+   if(k.status=="Kosong"){
+    kamar.innerHTML+=`<option value="${k.no}">${k.no}</option>`;
+   }else{
+    kamar_out.innerHTML+=`<option value="${k.no}">${k.no}</option>`;
+   }
+  });
+
+  if(kamar.value) setHarga();
+ });
+}
+
+/* ===== TAMBAH KAMAR ===== */
+function toggleTambah(){
+ formTambah.classList.toggle("hidden");
+}
+
+function tambahKamar(){
+ fetch(url,{
+  method:"POST",
+  body:JSON.stringify({
+   action:"tambahKamar",
+   no:tk_no.value,
+   tipe:tk_tipe.value,
+   harga:tk_harga.value
+  })
+ }).then(()=>{formTambah.classList.add("hidden");load();});
+}
+
+/* ===== EDIT ===== */
+function edit(no,tipe,h){
+ const t=prompt("Tipe kamar:",tipe); if(!t)return;
+ const hg=prompt("Harga:",h); if(!hg)return;
+
+ fetch(url,{
+  method:"POST",
+  body:JSON.stringify({
+   action:"editKamar",
+   no:no,
+   tipe:t,
+   harga:hg
+  })
+ }).then(load);
+}
+
+/* ===== HAPUS ===== */
+function hapus(no){
+ if(!confirm("Hapus kamar "+no+"?")) return;
+ fetch(url,{
+  method:"POST",
+  body:JSON.stringify({action:"hapusKamar",no:no})
+ }).then(load);
+}
+
+/* ===== SET HARGA ===== */
+function setHarga(){
+ const k=dataKamar.find(x=>x.no==kamar.value);
+ if(!k) return;
+ harga.value=k.harga;
+ hitungTotal();
+}
+
+/* ===== PLACEHOLDER DISKON ===== */
+function ubahPlaceholder(){
+ diskon.placeholder=jenisDiskon.value=="persen"?"Diskon (%)":"Diskon (Rp)";
+}
+
+/* ===== HITUNG TOTAL ===== */
+function hitungTotal(){
+ if(!ci.value||!co.value||!harga.value){
+  total.value="";
+  totalDiskon.value="";
+  return;
+ }
+
+ const masuk=new Date(ci.value);
+ const keluar=new Date(co.value);
+ const malam=Math.round((keluar-masuk)/(1000*60*60*24));
+ const subtotal=malam>0?malam*harga.value:0;
+
+ total.value=subtotal;
+
+ const d=Number(diskon.value)||0;
+ let after=subtotal;
+
+ if(jenisDiskon.value=="persen"){
+  after=subtotal-(subtotal*d/100);
+ }else{
+  after=subtotal-d;
+ }
+
+ totalDiskon.value=after>0?after:0;
+}
+
+/* ===== CHECKIN ===== */
+function checkin(){
+ fetch(url,{
+  method:"POST",
+  body:JSON.stringify({
+   action:"checkin",
+   nama:nama.value,
+   hp:hp.value,
+   kamar:kamar.value,
+   checkin:ci.value,
+   checkout:co.value,
+   total:totalDiskon.value,
+   diskon:diskon.value,
+   jenisDiskon:jenisDiskon.value
+  })
+ }).then(()=>{alert("Check-In berhasil");load();});
+}
+
+/* ===== CHECKOUT ===== */
+function checkout(){
+ fetch(url,{
+  method:"POST",
+  body:JSON.stringify({
+   action:"checkout",
+   kamar:kamar_out.value
+  })
+ }).then(()=>{alert("Checkout berhasil");load();});
+}
+
+/* ===== NAV MENU ===== */
+function show(id){
+ ["kamarCard","checkinCard","checkoutCard"].forEach(x=>{
+  document.getElementById(x).classList.add("hidden");
+ });
+ document.getElementById(id).classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>

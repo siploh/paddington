@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Tamu</title>
+
+<style>
+:root{
+  --primary:#16a34a;     /* hijau utama */
+  --primary-dark:#15803d;
+  --bg:#f0fdf4;          /* hijau muda background */
+  --border:#bbf7d0;
+  --text:#064e3b;
+  --success:#16a34a;
+  --danger:#dc2626;
+}
+
+*{box-sizing:border-box}
+
+body{
+  font-family:"Segoe UI",system-ui,sans-serif;
+  background:linear-gradient(135deg,#dcfce7,#f0fdf4);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  color:var(--text);
+}
+
+.card{
+  width:100%;
+  max-width:420px;
+  background:#ffffff;
+  border-radius:18px;
+  padding:28px;
+  box-shadow:0 25px 50px rgba(0,0,0,.08);
+}
+
+.card h2{
+  text-align:center;
+  margin-bottom:6px;
+  font-size:22px;
+}
+
+.card p{
+  text-align:center;
+  font-size:14px;
+  color:#065f46;
+  margin-bottom:22px;
+}
+
+label{
+  font-size:13px;
+  font-weight:600;
+  margin-top:14px;
+  display:block;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="file"]{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-size:14px;
+}
+
+input:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(22,163,74,.15);
+}
+
+.preview{
+  margin-top:12px;
+  text-align:center;
+}
+
+.preview img{
+  max-width:140px;
+  border-radius:12px;
+  display:none;
+  box-shadow:0 10px 20px rgba(0,0,0,.15);
+}
+
+button{
+  margin-top:24px;
+  width:100%;
+  padding:14px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.status{
+  margin-top:14px;
+  text-align:center;
+  font-size:14px;
+  display:none;
+}
+
+.status.success{color:var(--success)}
+.status.error{color:var(--danger)}
+.status.loading{color:var(--primary-dark)}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Buku Tamu</h2>
+  <p>Silakan isi data tamu</p>
+
+  <label>Nama Lengkap</label>
+  <input id="nama" type="text" placeholder="Masukkan nama" required>
+
+  <label>No. Handphone</label>
+  <input id="hp" type="tel" placeholder="08xxxxxxxxxx" required>
+
+  <label>Foto KTP</label>
+  <input id="foto" type="file" accept="image/*" required>
+
+  <div class="preview">
+    <img id="preview">
+  </div>
+
+  <button id="btn" onclick="kirim()">Simpan Data</button>
+
+  <div id="status" class="status"></div>
+</div>
+
+<script>
+const fotoInput = document.getElementById("foto");
+const preview = document.getElementById("preview");
+const statusBox = document.getElementById("status");
+const btn = document.getElementById("btn");
+
+fotoInput.addEventListener("change", () => {
+  const file = fotoInput.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
+
+function kirim(){
+  if(!nama.value || !hp.value || !fotoInput.files[0]){
+    alert("Lengkapi semua data");
+    return;
+  }
+
+  btn.disabled = true;
+  statusBox.className = "status loading";
+  statusBox.textContent = "Mengirim data...";
+  statusBox.style.display = "block";
+
+  const file = fotoInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    fetch("https://script.google.com/macros/s/AKfycbzcsZQ3OEo6qGnwTxludS5VFlIfmZfNcb4IZtAfkTmhfzH6kRjeZwXkwip835bQ9flt/exec", {
+      method:"POST",
+      body:JSON.stringify({
+        nama: nama.value.trim(),
+        hp: hp.value.trim(),
+        foto: reader.result.split(",")[1],
+        mimeType: file.type
+      })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if(res.status === "duplicate"){
+        statusBox.className = "status error";
+        statusBox.textContent = res.message;
+        btn.disabled = false;
+        return;
+      }
+
+      statusBox.className = "status success";
+      statusBox.textContent = "Data berhasil disimpan";
+
+      nama.value = "";
+      hp.value = "";
+      fotoInput.value = "";
+      preview.style.display = "none";
+      btn.disabled = false;
+    })
+    .catch(() => {
+      statusBox.className = "status error";
+      statusBox.textContent = "Gagal mengirim data";
+      btn.disabled = false;
+    });
+  };
+
+  reader.readAsDataURL(file);
+}
+</script>
+
+</body>
+</html>

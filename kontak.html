@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bawah Tangga Production</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #16a34a;
+    --secondary-color: #ffffff;
+    --accent-color: #14a248;
+    --bg-color: #f0f4f8;
+    --card-bg: #ffffff;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  header {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    padding: 25px 40px;
+    text-align: center;
+    font-size: 2em;
+    font-weight: 600;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  .card {
+    background-color: var(--card-bg);
+    border-radius: 20px;
+    padding: 40px 30px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    transition: transform 0.4s, box-shadow 0.4s;
+    cursor: pointer;
+  }
+
+  .card:hover {
+    transform: translateY(-15px) scale(1.05);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+  }
+
+  .card img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 25px;
+    border: 4px solid var(--primary-color);
+  }
+
+  .card h3 {
+    font-size: 1.6em;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+  }
+
+  .card p {
+    font-size: 1em;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .card a {
+    display: inline-block;
+    margin-top: 10px;
+    font-weight: 500;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  .card a:hover {
+    color: var(--accent-color);
+  }
+
+  footer {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    text-align: center;
+    padding: 15px 20px;
+    font-size: 0.95em;
+  }
+
+  footer a {
+    color: #fff;
+    text-decoration: underline;
+    transition: color 0.3s;
+  }
+
+  footer a:hover {
+    color: var(--accent-color);
+  }
+
+  @media (max-width: 500px) {
+    .card {
+      padding: 30px 20px;
+    }
+    header {
+      font-size: 1.5em;
+      padding: 20px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>Bawah Tangga Production</header>
+
+<div class="main">
+  <div class="card">
+    <img src="https://via.placeholder.com/120" alt="Logo">
+    <h3>Website Resmi</h3>
+    <p>Kunjungi website resmi kami di <strong>bawahtangga.web.id</strong> untuk informasi lengkap dan karya terbaru.</p>
+    <p>📞 WhatsApp: <a href="https://wa.me/6285183329989" target="_blank">0851-8332-9989</a></p>
+    <p>✉️ Email: <a href="mailto:productionbawahtangga@gmail.com">productionbawahtangga@gmail.com</a></p>
+    <a href="https://bawahtangga.web.id" target="_blank">Kunjungi Website</a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 Bawah Tangga Production | <a href="https://bawahtangga.web.id" target="_blank">bawahtangga.web.id</a>
+</footer>
+
+</body>
+</html>

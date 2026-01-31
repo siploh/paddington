@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bawah Tangga Production</title>
+
+<style>
+:root{
+  --primary:#16a34a;
+  --primary-dark:#166534;
+  --danger:#dc2626;
+  --bg:#f0fdf4;
+  --card:#ffffff;
+}
+
+body{
+  font-family:Segoe UI,system-ui,sans-serif;
+  background:linear-gradient(135deg,#dcfce7,#f0fdf4);
+  margin:0;
+  padding:30px;
+}
+
+h1{
+  text-align:center;
+  color:var(--primary-dark);
+  margin-bottom:10px;
+}
+
+.controls{
+  max-width:1100px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:1fr 200px;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+input{
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #86efac;
+  outline:none;
+}
+
+input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(22,163,74,.2);
+}
+
+.grid{
+  max-width:1100px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  overflow:hidden;
+  transition:.2s;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+}
+
+.card img{
+  width:100%;
+  height:200px;
+  object-fit:cover;
+  cursor:pointer;
+}
+
+.card-body{padding:14px}
+
+.name{
+  font-weight:700;
+  color:#064e3b;
+}
+
+.hp{
+  font-size:14px;
+  color:#475569;
+  margin-bottom:10px;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+}
+
+button{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.edit{
+  background:var(--primary);
+  color:white;
+}
+
+.delete{
+  background:var(--danger);
+  color:white;
+}
+
+/* MODAL FOTO */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99;
+}
+
+.modal img{
+  max-width:90%;
+  max-height:90%;
+  border-radius:14px;
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
+}
+</style>
+</head>
+
+<body>
+
+<h1>Buku Tamu</h1>
+
+<div class="controls">
+  <input id="search" placeholder="Cari nama / no HP">
+  <input id="date" type="date">
+</div>
+
+<div id="grid" class="grid"></div>
+
+<div id="modal" class="modal" onclick="this.style.display='none'">
+  <img id="modalImg">
+</div>
+
+<script>
+const URL = "https://script.google.com/macros/s/AKfycbwDbupuRMXip-gBeHhJWxIuqm1PJelTiLJU9pABhrMSj8iNCshE0sfrHTdd8l9ZJlAG/exec";
+let dataGlobal = [];
+
+// Ambil data dari Google Apps Script
+fetch(URL)
+  .then(r => r.json())
+  .then(data => {
+    dataGlobal = data.reverse();
+    render(dataGlobal.slice(0,5));
+  });
+
+// Render kartu
+function render(data){
+  const grid = document.getElementById("grid");
+  grid.innerHTML="";
+  data.forEach(d=>{
+    const card=document.createElement("div");
+    card.className="card";
+    const fotoDirect = d.foto; // langsung dari Sheet
+    card.innerHTML=`
+      <img src="${fotoDirect}" onclick="showFoto('${fotoDirect}')">
+      <div class="card-body">
+        <div class="name">${d.nama}</div>
+        <div class="hp">${d.hp}</div>
+        <div class="actions">
+          <button class="edit" onclick="editData(${d.row},'${d.nama}','${d.hp}')">Edit</button>
+          <button class="delete" onclick="hapus(${d.row})">Hapus</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// Filter data
+document.getElementById("search").oninput = filter;
+document.getElementById("date").onchange = filter;
+
+function filter(){
+  const s = document.getElementById("search").value.toLowerCase();
+  const d = document.getElementById("date").value;
+
+  const hasil = dataGlobal.filter(x=>{
+    const cocokText = x.nama.toLowerCase().includes(s) || x.hp.includes(s);
+    const cocokDate = !d || x.tanggal.toString().includes(d);
+    return cocokText && cocokDate;
+  });
+
+  if(s || d){
+    render(hasil);
+  }else{
+    render(dataGlobal.slice(0,5));
+  }
+}
+
+// Modal foto
+function showFoto(src){
+  const modal = document.getElementById("modal");
+  const modalImg = document.getElementById("modalImg");
+  modalImg.src = src;
+  modal.style.display="flex";
+}
+
+// Hapus data
+function hapus(row){
+  if(!confirm("Hapus data ini?")) return;
+  fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({action:"delete",row})
+  }).then(()=>location.reload());
+}
+
+// Edit data
+function editData(row,nama,hp){
+  const n = prompt("Nama",nama);
+  const h = prompt("No HP",hp);
+  if(!n||!h) return;
+
+  fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({action:"edit",row,nama:n,hp:h})
+  }).then(()=>location.reload());
+}
+</script>
+
+</body>
+</html>
